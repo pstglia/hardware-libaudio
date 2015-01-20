@@ -729,7 +729,7 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
                     break;
                 total_sleep_time_us += sleep_time_us;
                 if (total_sleep_time_us > MAX_WRITE_SLEEP_US) {
-                    ALOGW("out_write() limiting sleep time %d to %d",
+                    ALOGV("out_write() limiting sleep time %d to %d",
                           total_sleep_time_us, MAX_WRITE_SLEEP_US);
                     sleep_time_us = MAX_WRITE_SLEEP_US -
                                         (total_sleep_time_us - sleep_time_us);
@@ -769,6 +769,7 @@ static ssize_t out_write(struct audio_stream_out *stream, const void* buffer,
     if (ret == -EPIPE) {
         /* In case of underrun, don't sleep since we want to catch up asap */
         pthread_mutex_unlock(&out->lock);
+        ALOGW("out_write underrun: %d", ret);
         return ret;
     }
 
@@ -776,6 +777,7 @@ exit:
     pthread_mutex_unlock(&out->lock);
 
     if (ret != 0) {
+        ALOGW("out_write error: %d, sleeping...", ret);
         usleep(bytes * 1000000 / audio_stream_frame_size(&stream->common) /
                out_get_sample_rate(&stream->common));
     }
